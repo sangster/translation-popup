@@ -1,5 +1,12 @@
 * translation-popup
 
+#+begin_src sh :exports results :results output raw
+  echo "Current Version: =$(nix eval --raw .#default.passthru.version)="
+#+end_src
+
+#+RESULTS:
+Current Version: =0.0.1=
+
 This script stitches together =tesseract= and =translate-shell= to quickly
 pop-up language translations.
 
@@ -32,7 +39,12 @@ TODO
 
 ** =--help=
 
-#+begin_src
+#+begin_src sh :exports results :results output verbatim
+  nix run .# -- --help
+#+end_src
+
+#+RESULTS:
+#+begin_example
 Usage: translation-popup [-hvioft]
 
 This shell script facilitates fast machine translation of on-screen text.
@@ -54,4 +66,4 @@ Input methods:
 Output methods:
   kitty   Show the translated text in a kitty window.
   stdout  Write tranlated text to STDOUT.
-#+end_src
+#+end_example

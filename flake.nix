@@ -37,6 +37,9 @@
                 --inherit-argv0 \
                 --prefix PATH : $out/bin
             '';
+            passthru = {
+              inherit version;
+            };
           };
         };
       }
