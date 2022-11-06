@@ -1,0 +1,57 @@
+* translation-popup
+
+This script stitches together =tesseract= and =translate-shell= to quickly
+pop-up language translations.
+
+This script has two main use-cases:
+
+ - OCR mode :: This mode prompts you to draw a rectangle around on-screen text
+   which you want to translate. This mode is useful for translating subtitles in
+   videos or games, or in images.
+ - Selection mode :: This mode will translate the region of text you currently
+   have selected.
+
+The primary motivation of this script is to show translations /quickly/. When
+starting to learn a new language, I find that I need to translate words and
+phrases constantly—often multiple times per sentence. This makes it important to
+be able to bring up a translation in only one or two clicks.
+
+** Desktop Integration
+
+TODO
+
+** Dependencies
+
+- [[https://www.gnu.org/software/coreutils/][coreutils]]
+- [[https://flameshot.org/][flameshot]]
+- [[https://sw.kovidgoyal.net/kitty/][kitty]]
+- [[https://mpv.io/][mpv]]
+- [[https://github.com/tesseract-ocr/tesseract][tesseract]]
+- [[https://github.com/soimort/translate-shell][translate-shell]]
+- [[https://github.com/astrand/xclip][xclip]]
+
+** =--help=
+
+#+begin_src
+Usage: translation-popup [-hvioft]
+
+This shell script facilitates fast machine translation of on-screen text.
+
+Options:
+  -h, --help            Print this help and exit.
+  -v, --verbose         Enable verbose mode.
+  -i, --input=INPUT     Input method [default: ocr].
+  -o, --output=OUTPUT   Output method [default: kitty].
+  -f, --from-lang=LANG  Input language [default: zh-CN].
+  -t, --to-lang=LANG    Output language [default: en].
+
+Input methods:
+  ocr        Draw a rectangle on the screen and translate text in that area.
+  clipboard  Translate the contents of the clipboard.
+  selection  Translate the selected text.
+  stdin      Translate STDIN.
+
+Output methods:
+  kitty   Show the translated text in a kitty window.
+  stdout  Write tranlated text to STDOUT.
+#+end_src
