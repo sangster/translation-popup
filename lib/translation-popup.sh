@@ -123,7 +123,7 @@ translateText() {
 }
 
 ocrImage() {
-    local lang="$(translateShellLangToTesseractLang "$toLang")"
+    local lang="$(translateShellLangToTesseractLang "$fromLang")"
     local imgPath="$1"
     tesseract -l "$lang" "$imgPath" stdout | tidyUpOcrText
 }
