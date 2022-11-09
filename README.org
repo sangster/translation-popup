@@ -12,11 +12,11 @@ pop-up language translations.
 
 This script has two main use-cases:
 
- - OCR mode :: This mode prompts you to draw a rectangle around on-screen text
-   which you want to translate. This mode is useful for translating subtitles in
-   videos or games, or in images.
- - Selection mode :: This mode will translate the region of text you currently
-   have selected.
+- OCR mode :: This mode prompts you to draw a rectangle around on-screen text
+  which you want to translate. This mode is useful for translating subtitles in
+  videos or games, or in images.
+- Selection mode :: This mode will translate the region of text you currently
+  have selected.
 
 The primary motivation of this script is to show translations /quickly/. When
 starting to learn a new language, I find that I need to translate words and

@@ -3,35 +3,32 @@
 
   inputs.flake-utils.url = "github:numtide/flake-utils";
 
-  outputs = { self, nixpkgs, flake-utils }:
-    flake-utils.lib.eachDefaultSystem (system:
-      let
-        pkgs = import nixpkgs { inherit system; };
-        pname = "translation-popup";
-        version = "0.0.1";
+  outputs = { nixpkgs, flake-utils, ... }:
+    let
+      pname = "translation-popup";
+      version = "0.0.2";
 
-        script = builtins.readFile ./lib/translation-popup.sh;
-        buildInputs = with pkgs; [
-          coreutils
-          flameshot
-          kitty
-          mpv
-          tesseract
-          translate-shell
-          xclip
-        ];
-
-        drv = (pkgs.writeScriptBin pname script).overrideAttrs(old: {
-          buildCommand = "${old.buildCommand}\n patchShebangs $out";
-        });
-      in rec {
-        packages = {
-          default = packages.translate-shell;
-
-          translate-shell = pkgs.symlinkJoin {
+      overlay = final: prev: {
+        translation-popup =
+          let
+            inherit (prev) makeWrapper symlinkJoin writeScriptBin;
+            script = builtins.readFile ./lib/translation-popup.sh;
+            buildInputs = with final; [
+              coreutils
+              flameshot
+              kitty
+              mpv
+              tesseract
+              translate-shell
+              xclip
+            ];
+            drv = (writeScriptBin pname script).overrideAttrs(old: {
+              buildCommand = "${old.buildCommand}\n patchShebangs $out";
+            });
+          in symlinkJoin {
             name = "${pname}-${version}";
             paths = [ drv ] ++ buildInputs;
-            buildInputs = [ pkgs.makeWrapper ];
+            buildInputs = [ makeWrapper ];
             postBuild = ''
               wrapProgram $out/bin/${pname} \
                 --inherit-argv0 \
@@ -41,6 +38,16 @@
               inherit version;
             };
           };
+      };
+    in
+    { inherit overlay; } //
+    flake-utils.lib.eachDefaultSystem (system:
+      let
+        pkgs = import nixpkgs { inherit system; overlays = [overlay]; };
+      in rec {
+        packages = {
+          default = pkgs.translation-popup;
+          translation-popup = pkgs.translation-popup;
         };
       }
     );

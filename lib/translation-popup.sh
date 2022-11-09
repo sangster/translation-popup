@@ -123,8 +123,8 @@ translateText() {
 }
 
 ocrImage() {
-    lang="$(translateShellLangToTesseractLang "$toLang")"
-    imgPath="$1"
+    local lang="$(translateShellLangToTesseractLang "$toLang")"
+    local imgPath="$1"
     tesseract -l "$lang" "$imgPath" stdout | tidyUpOcrText
 }
 
@@ -146,7 +146,7 @@ kittyWindowTranslate() {
 }
 
 kittyWindowTitle() {
-    printf "Translate $fromLang → $toLang ($input)"
+    printf "Translate %s → %s (%s)" "$fromLang" "$toLang" "$input"
 }
 
 translateShellLangToTesseractLang() {
