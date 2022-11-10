@@ -14,9 +14,11 @@
             inherit (prev) makeWrapper symlinkJoin writeScriptBin;
             script = builtins.readFile ./lib/translation-popup.sh;
             buildInputs = with final; [
+              bc
               coreutils
               flameshot
               kitty
+              imagemagick
               mpv
               tesseract
               translate-shell
@@ -48,6 +50,9 @@
         packages = {
           default = pkgs.translation-popup;
           translation-popup = pkgs.translation-popup;
+        };
+        devShell = pkgs.mkShell {
+          buildInputs = packages.default.paths;
         };
       }
     );

@@ -2,14 +2,14 @@
 set -Eeuo pipefail
 trap cleanup SIGINT SIGTERM ERR EXIT
 
-scriptDir=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd -P)
-scriptName="$(basename "${BASH_SOURCE[0]}")"
 tmpDir=$(mktemp -d "${TMPDIR:-/tmp/}$(basename "$0").XXXXXX")
 defaultInput="ocr"
 defaultOutput="kitty"
 defaultFromLang="zh-CN"
 defaultToLang="en"
 xwinClass="translation-popup"
+ocrCleaning="y"
+asciiInput="y"
 
 kittyFontSize=16
 
@@ -26,6 +26,8 @@ Options:
   -o, --output=OUTPUT   Output method [default: $defaultOutput].
   -f, --from-lang=LANG  Input language [default: $defaultFromLang].
   -t, --to-lang=LANG    Output language [default: $defaultToLang].
+      --no-ocr-clean    Disable OCR Cleaning.
+      --no-ascii        Remove all ASCII characters from the input.
 
 Input methods:
   ocr        Draw a rectangle on the screen and translate text in that area.
@@ -36,6 +38,26 @@ Input methods:
 Output methods:
   kitty   Show the translated text in a kitty window.
   stdout  Write tranlated text to STDOUT.
+
+OCR Cleaning:
+
+  To improve the chance of a good translation, when scanning the screen with
+  OCR, this script will attempt to clean up the image before passing it to
+  Tesseract:
+
+  - Tesseract requires black text on a white background. If the image is mostly
+    dark (and probably white text on a black background), the image colors are
+    negated.
+  - An attempt is made to remove any background or noise from the image.
+  - The image is made b/w.
+  - Tesseract recommends that scanned images have a 10 pt white border.
+
+  See these links for more info:
+
+  - https://stackoverflow.com/q/66489314
+  - https://www.imagemagick.org/discourse-server/viewtopic.php?t=26571
+  - https://imagemagick.org/script/command-line-options.php#lat
+  - https://stb-tester.com/blog/2014/04/14/improving-ocr-accuracy
 EOF
   exit
 }
@@ -43,17 +65,6 @@ EOF
 cleanup() {
     trap - SIGINT SIGTERM ERR EXIT
     [ -n "$tmpDir" ] && rm -rf "$tmpDir"
-}
-
-setup_colors() {
-    if [[ -t 2 ]] && [[ -z "${NO_COLOR-}" ]] && [[ "${TERM-}" != "dumb" ]]; then
-        NOFORMAT='\033[0m' RED='\033[0;31m' GREEN='\033[0;32m'
-        ORANGE='\033[0;33m' BLUE='\033[0;34m' PURPLE='\033[0;35m'
-        CYAN='\033[0;36m' YELLOW='\033[1;33m'
-    else
-        NOFORMAT='' RED='' GREEN='' ORANGE=''
-        BLUE='' PURPLE='' CYAN='' YELLOW=''
-    fi
 }
 
 msg() {
@@ -68,9 +79,10 @@ die() {
 }
 
 opts() {
-    getopt -n "$scriptName" \
+    getopt -n "$0" \
            -o hvi:o:f:t: \
            -l help,verbose,input:,output:,from-lang:,to-lang: \
+           -l no-ocr-clean,no-ascii \
            -- "$@"
 }
 
@@ -90,6 +102,8 @@ parse_params() {
             -o | --output) output="$2"; shift ;;
             -f | --from-lang) fromLang="$2"; shift ;;
             -t | --to-lang) toLang="$2"; shift ;;
+            --no-ocr-clean) ocrCleaning="" ;;
+            --no-ascii) asciiInput="" ;;
             --) shift; break ;;
             -?*) die "Unknown option: $1" ;;
             *) break ;;
@@ -103,7 +117,6 @@ parse_params() {
 }
 
 parse_params "$@"
-setup_colors
 
 
 grabScreenRegionPng() {
@@ -125,15 +138,62 @@ translateText() {
 ocrImage() {
     local lang="$(translateShellLangToTesseractLang "$fromLang")"
     local imgPath="$1"
-    tesseract -l "$lang" "$imgPath" stdout | tidyUpOcrText
+
+    if [ -n "$ocrCleaning" ]; then
+        [ -n "$(isMostlyBlack "$imgPath")" ] && \
+            imgPath="$(negateColor "$imgPath")"
+        imgPath="$(cleanImageBeforeOcr "$imgPath")"
+    fi
+
+    tesseract -psm 6 -l "$lang" "$imgPath" stdout | tidyUpOcrText
 }
 
 tidyUpOcrText() {
-    tr "\n" ' '
+    local text="$(tr "\n" ' ')"
+    [ -n "$asciiInput" ] && echo "$text" || echo "${text//[[:ascii:]]/}"
 }
 
 getXClipboard() {
     xclip -selection "$1" -o
+}
+
+cleanImageBeforeOcr() {
+    local path="$1"
+    local output="$tmpDir/ocr-clean.png"
+    convert "$path" \
+            -colorspace gray \
+            -filter Triangle -resample '300%' \
+            -lat 40x40-20% \
+            -depth 4 \
+            -compress Group4 \
+            -bordercolor White -border 10x10 \
+            "$output"
+    echo "$output"
+}
+
+isMostlyBlack() {
+    local path="$1"
+    [ "$(hexToDec "$(dominantGray "$path")")" -lt 128 ] && printf y || printf ""
+}
+
+# Convert a hex number to decimal.
+hexToDec() {
+    local hex="$1"
+    bc <<< "obase=10; ibase=16; $hex"
+}
+
+# Get the average gray value (two-digit hex number) for the image.
+dominantGray() {
+    local path="$1"
+    convert "$path" -set colorspace Gray -separate -average -kmeans 2 \
+            -format "%[dominant-color]" info:- | cut -b 2,3
+}
+
+negateColor() {
+    local path="$1"
+    local output="$tmpDir/negate-color.png"
+    convert "$path" -negate "$output"
+    echo "$output"
 }
 
 kittyWindowTranslate() {
@@ -142,7 +202,7 @@ kittyWindowTranslate() {
           --class "$xwinClass" \
           --title "$(kittyWindowTitle)" \
           -o font_size="$kittyFontSize" \
-          sh -c "'$scriptName' -i stdin -o stdout < '$tmpDir/input.txt'"
+          sh -c "'$0' -i stdin -o stdout < '$tmpDir/input.txt'"
 }
 
 kittyWindowTitle() {
