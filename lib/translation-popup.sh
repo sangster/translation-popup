@@ -40,7 +40,6 @@ Output methods:
   stdout  Write tranlated text to STDOUT.
 
 OCR Cleaning:
-
   To improve the chance of a good translation, when scanning the screen with
   OCR, this script will attempt to clean up the image before passing it to
   Tesseract:

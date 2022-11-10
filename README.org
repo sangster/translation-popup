@@ -5,7 +5,7 @@
 #+end_src
 
 #+RESULTS:
-Current Version: =0.0.1=
+Current Version: =0.0.3=
 
 This script stitches together =tesseract= and =translate-shell= to quickly
 pop-up language translations.
@@ -56,6 +56,8 @@ Options:
   -o, --output=OUTPUT   Output method [default: kitty].
   -f, --from-lang=LANG  Input language [default: zh-CN].
   -t, --to-lang=LANG    Output language [default: en].
+      --no-ocr-clean    Disable OCR Cleaning.
+      --no-ascii        Remove all ASCII characters from the input.
 
 Input methods:
   ocr        Draw a rectangle on the screen and translate text in that area.
@@ -66,4 +68,24 @@ Input methods:
 Output methods:
   kitty   Show the translated text in a kitty window.
   stdout  Write tranlated text to STDOUT.
+
+OCR Cleaning:
+
+  To improve the chance of a good translation, when scanning the screen with
+  OCR, this script will attempt to clean up the image before passing it to
+  Tesseract:
+
+  - Tesseract requires black text on a white background. If the image is mostly
+    dark (and probably white text on a black background), the image colors are
+    negated.
+  - An attempt is made to remove any background or noise from the image.
+  - The image is made b/w.
+  - Tesseract recommends that scanned images have a 10 pt white border.
+
+  See these links for more info:
+
+  - https://stackoverflow.com/q/66489314
+  - https://www.imagemagick.org/discourse-server/viewtopic.php?t=26571
+  - https://imagemagick.org/script/command-line-options.php#lat
+  - https://stb-tester.com/blog/2014/04/14/improving-ocr-accuracy
 #+end_example

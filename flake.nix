@@ -6,7 +6,7 @@
   outputs = { nixpkgs, flake-utils, ... }:
     let
       pname = "translation-popup";
-      version = "0.0.2";
+      version = "0.0.3";
 
       overlay = final: prev: {
         translation-popup =
