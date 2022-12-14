@@ -162,7 +162,8 @@ cleanImageBeforeOcr() {
     convert "$path" \
             -colorspace gray \
             -filter Triangle -resample '300%' \
-            -lat 40x40-20% \
+            -level 33% \
+            -sharpen 25x25 \
             -depth 4 \
             -compress Group4 \
             -bordercolor White -border 10x10 \
