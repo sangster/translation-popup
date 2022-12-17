@@ -161,7 +161,7 @@ cleanImageBeforeOcr() {
     local output="$tmpDir/ocr-clean.png"
     convert "$path" \
             -colorspace gray \
-            -filter Triangle -resample '300%' \
+            -filter Triangle -resample '200%' \
             -level 33% \
             -sharpen 25x25 \
             -depth 4 \
