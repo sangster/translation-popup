@@ -7,6 +7,8 @@ defaultInput="ocr"
 defaultOutput="kitty"
 defaultFromLang="zh-CN"
 defaultToLang="en"
+defaultOcrCleanBig=""
+defaultAudioPlayer="mpv"
 xwinClass="translation-popup"
 ocrCleaning="y"
 asciiInput="y"
@@ -26,7 +28,9 @@ Options:
   -o, --output=OUTPUT   Output method [default: $defaultOutput].
   -f, --from-lang=LANG  Input language [default: $defaultFromLang].
   -t, --to-lang=LANG    Output language [default: $defaultToLang].
+      --audio-player=prog  Program to play audio translations with.
       --no-ocr-clean    Disable OCR Cleaning.
+      --ocr-clean-big   Increase the size of the image when cleaning.
       --no-ascii        Remove all ASCII characters from the input.
 
 Input methods:
@@ -81,7 +85,7 @@ opts() {
     getopt -n "$0" \
            -o hvi:o:f:t: \
            -l help,verbose,input:,output:,from-lang:,to-lang: \
-           -l no-ocr-clean,no-ascii \
+           -l audio-player:,no-ocr-clean,ocr-clean-big,no-ascii \
            -- "$@"
 }
 
@@ -92,6 +96,8 @@ parse_params() {
     output="$defaultOutput"
     fromLang="$defaultFromLang"
     toLang="$defaultToLang"
+    ocrCleanBig="$defaultOcrCleanBig"
+    audioPlayer="$defaultAudioPlayer"
 
     while :; do
         case "${1-}" in
@@ -101,7 +107,9 @@ parse_params() {
             -o | --output) output="$2"; shift ;;
             -f | --from-lang) fromLang="$2"; shift ;;
             -t | --to-lang) toLang="$2"; shift ;;
+            --audio-player) audioPlayer="$2"; shift ;;
             --no-ocr-clean) ocrCleaning="" ;;
+            --ocr-clean-big) ocrCleanBig=="y" ;;
             --no-ascii) asciiInput="" ;;
             --) shift; break ;;
             -?*) die "Unknown option: $1" ;;
@@ -131,7 +139,7 @@ translateText() {
           -show-original y \
           -show-translation n \
           -speak \
-          -player mpv
+          -player "$audioPlayer"
 }
 
 ocrImage() {
@@ -159,9 +167,14 @@ getXClipboard() {
 cleanImageBeforeOcr() {
     local path="$1"
     local output="$tmpDir/ocr-clean.png"
+    local bigFilter=""
+    if [ -n "$ocrCleanBig" ]; then
+        bigFilter="-filter Triangle -resample '200%'"
+    fi
+
     convert "$path" \
             -colorspace gray \
-            -filter Triangle -resample '200%' \
+            $bigFilter \
             -level 33% \
             -sharpen 25x25 \
             -depth 4 \
