@@ -152,7 +152,7 @@ ocrImage() {
         imgPath="$(cleanImageBeforeOcr "$imgPath")"
     fi
 
-    tesseract -psm 6 -l "$lang" "$imgPath" stdout | tidyUpOcrText
+    tesseract --psm 6 -l "$lang" "$imgPath" stdout | tidyUpOcrText
 }
 
 tidyUpOcrText() {
