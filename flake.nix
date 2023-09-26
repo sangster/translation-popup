@@ -14,6 +14,7 @@
             inherit (prev) makeWrapper symlinkJoin writeScriptBin;
             script = builtins.readFile ./lib/translation-popup.sh;
             buildInputs = with final; [
+              bash
               bc
               coreutils
               flameshot

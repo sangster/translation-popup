@@ -211,11 +211,11 @@ negateColor() {
 
 kittyWindowTranslate() {
     cat > "$tmpDir/input.txt"
-    kitty --hold \
-          --class "$xwinClass" \
+    local prompt="read -n 1 -r -s -p $'Press enter to continue...\n'"
+    kitty --class "$xwinClass" \
           --title "$(kittyWindowTitle)" \
           -o font_size="$kittyFontSize" \
-          sh -c "'$0' -i stdin -o stdout < '$tmpDir/input.txt'"
+          bash -c "'$0' -i stdin -o stdout < '$tmpDir/input.txt'; $prompt"
 }
 
 kittyWindowTitle() {
