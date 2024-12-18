@@ -1,7 +1,10 @@
 {
   description = "Simple scripts for popping up language translations.";
 
-  inputs.flake-utils.url = "github:numtide/flake-utils";
+  inputs = {
+    nixpkgs.url = github:nixos/nixpkgs?ref=nixos-24.11;
+    flake-utils.url = github:numtide/flake-utils?rev=74f7e4319258e287b0f9cb95426c9853b282730b;
+  };
 
   outputs = { nixpkgs, flake-utils, ... }:
     let
